@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="leb">
+	
+	<!-- 장바구니에 담긴 상품정보 -->
+	<select id="selectShop" resultType="LebVo">
+		<![CDATA[
+			SELECT 
+						p.product_no,
+						p.productname,
+						p.price,
+						p.text,
+						p.picture,
+						p.size,
+						hi.hi_no,
+						hi.hoi,
+						s.count
+			FROM users u
+			LEFT JOIN shop s ON u.users_no = s.users_no
+			LEFT JOIN hi ON s.hi_no = hi.hi_no
+			LEFT JOIN product p ON p.product_no = s.product_no
+			LEFT JOIN cate c ON c.cate_no = p.cate_no
+			where u.users_no = 1
+		]]>
+	</select>
+	
+	<!-- 마일리지 정보 불러오기 -->
+	<select id="selectMile" resultType="int">
+		<![CDATA[
+			select totalmile
+			from mile
+			where users_no = 1
+			order by date desc
+			limit 1
+		]]>
+	</select>
+	
+	<!-- 지점 정보 불러오기 -->
+	<select id="selectFran" resultType="String">
+		<![CDATA[
+			select franchisee_name 
+			from franchisee
+			where franchisee_no = 1
+		]]>
+	</select>
+	
+	<!-- 장바구니 비우기 -->
+	<delete id="deleteCart" >
+		<![CDATA[
+			delete from shop
+			where users_no =1
+		]]>
+	</delete>
+	
+	<!-- 영수증 만들기 -->
+	<insert id="makeReceipt" parameterType="LebVo">
+		<![CDATA[
+			insert into receipt
+			values(null, 1, 1, #{total}, #{usemile}, now())
+		]]>
+		<selectKey keyProperty="receipt_no" resultType="int" order="AFTER">
+			<![CDATA[
+				select last_insert_id()
+			]]>
+		</selectKey>
+	</insert>
+	
+	<!-- 마일리지 증감 -->
+	<insert id="downMile" parameterType="LebVo">
+		<![CDATA[
+			insert into mile
+			values(1, now(), #{usemile}, "사용", #{totalmile})
+		]]>
+	</insert>
+	<insert id="upMile" parameterType="LebVo">
+		<![CDATA[
+			insert into mile
+			values(1, now(), #{usemile}, "적립", #{totalmile})
+		]]>
+	</insert>
+	
+	<!-- history 만들기 -->
+	<insert id="makeHistory" parameterType="LebVo">
+		<![CDATA[
+			insert into history
+			values(null, #{product_no}, #{receipt_no}, #{hi_no}, #{count})
+		]]>
+	</insert>
+	
+	
+	<!-- 바로구매 바로구매 바로구매 바로구매 바로구매 -->
+	<!-- 세부페이지에서 바로 구매 버튼 누르기 -->
+	<select id="selectDirect" resultType="LebVo" parameterType="int">
+		<![CDATA[
+			select product_no,
+					productname,
+					price,
+					text,
+					picture,
+					size
+			from product
+			where product_no = #{product_no}
+		]]>
+	</select>
+	<select id="hoi" resultType="String" parameterType="int">
+		<![CDATA[
+			select hoi
+			from hi
+			where hi_no = #{hi_no}
+		]]>
+	</select>
+	
+	
+</mapper>
